@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import socket       # Library for network sockets
-import paramiko     # Library for SSH server
+import socket       # Network sockets
+import paramiko     # SSH server
+import threading    # Multithreading
 
 HOST = "127.0.0.1"
 PORT = 2222
@@ -11,6 +12,17 @@ PORT = 2222
     ## Read message from client
     #print(client_sock.recv(256).decode())
 
+def handle_connection(client_sock):
+    # Create an SSH session over client socket
+    transport = paramiko.Transport(client_sock)
+    #server_key = paramiko.RSAKey.generate(2048)
+    # Retrieve pre-generated key from file
+    server_key = paramiko.RSAKey.from_private_key_file('id_rsa')
+    transport.add_server_key(server_key)
+    # Create SSH server interface
+    ssh = paramiko.ServerInterface()
+    # Start server with SSH server interface
+    transport.start_server(server=ssh)
 
 def main():
     # Make a TCP socket that communicates via IP addresses
@@ -20,20 +32,14 @@ def main():
     server_sock.bind((HOST, PORT))
     server_sock.listen()
 
+    # While loop to keep accepting connections when client socket disconnects
     while True:
         # Get connected client's IP address and port number
         client_sock, (client_ip, client_port) = server_sock.accept()
         print(f"Connection from {client_ip}:{client_port}")
-        # Create an SSH session over client socket
-        transport = paramiko.Transport(client_sock)
-        #server_key = paramiko.RSAKey.generate(2048)
-        # Retrieve pre-generated key from file
-        server_key = paramiko.RSAKey.from_private_key_file('id_rsa')
-        transport.add_server_key(server_key)
-        # Create SSH server interface
-        ssh = paramiko.ServerInterface()
-        # Start server with SSH server interface
-        transport.start_server(server=ssh)
+        # Implement threading to handle mutliple SSH sessions
+        t = threading.Thread(target=handle_connection, args=(client_sock,))
+        t.start()
 
 if __name__ == "__main__":
     main()
