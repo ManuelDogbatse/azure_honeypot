@@ -18,20 +18,22 @@ def main():
     # Allow port to be reused after closing socket
     server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_sock.bind((HOST, PORT))
-    server_sock.listen(100)
+    server_sock.listen()
 
-    # Get connected client's IP address and port number
-    client_sock, (client_ip, client_port) = server_sock.accept()
-    print(f"Connection from {client_ip}:{client_port}")
-    # Create an SSH session over client socket
-    transport = paramiko.Transport(client_sock)
-    # Generate key required for SSH server and add key to SSH session
-    server_key = paramiko.RSAKey.generate(2048)
-    transport.add_server_key(server_key)
-    # Create SSH server interface
-    ssh = paramiko.ServerInterface()
-    # Start server with SSH server interface
-    transport.start_server(server=ssh)
+    while True:
+        # Get connected client's IP address and port number
+        client_sock, (client_ip, client_port) = server_sock.accept()
+        print(f"Connection from {client_ip}:{client_port}")
+        # Create an SSH session over client socket
+        transport = paramiko.Transport(client_sock)
+        #server_key = paramiko.RSAKey.generate(2048)
+        # Retrieve pre-generated key from file
+        server_key = paramiko.RSAKey.from_private_key_file('id_rsa')
+        transport.add_server_key(server_key)
+        # Create SSH server interface
+        ssh = paramiko.ServerInterface()
+        # Start server with SSH server interface
+        transport.start_server(server=ssh)
 
 if __name__ == "__main__":
     main()
