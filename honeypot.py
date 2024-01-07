@@ -12,6 +12,11 @@ PORT = 2222
     ## Read message from client
     #print(client_sock.recv(256).decode())
 
+class SSHServer(paramiko.ServerInterface):
+    def check_auth_password(self, username: str, password: str) -> int:
+        print(f"username: {username}, password: {password}")
+        return paramiko.AUTH_FAILED
+
 def handle_connection(client_sock):
     # Create an SSH session over client socket
     transport = paramiko.Transport(client_sock)
@@ -20,7 +25,7 @@ def handle_connection(client_sock):
     server_key = paramiko.RSAKey.from_private_key_file('id_rsa')
     transport.add_server_key(server_key)
     # Create SSH server interface
-    ssh = paramiko.ServerInterface()
+    ssh = SSHServer()
     # Start server with SSH server interface
     transport.start_server(server=ssh)
 
