@@ -5,6 +5,7 @@ import socket       # Network sockets
 import paramiko     # SSH server
 import threading    # Multithreading
 import logging
+import base64
 from eprint import eprint
 from binascii import hexlify
 
@@ -19,7 +20,7 @@ logging.basicConfig(
         #format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         format="%(asctime)s - %(levelname)s - %(message)s",
         level=logging.INFO)
-        ##filename="ssh_honeypot.log")
+        #filename="ssh_honeypot.log")
 
 # Defining honeypot attributes
 class HoneypotServer(paramiko.ServerInterface):
@@ -41,12 +42,13 @@ class HoneypotServer(paramiko.ServerInterface):
     def check_auth_none(self, username):
         logging.info(f"no auth login attempt ({self.client_ip}:{self.client_port}: username: {username})")
 
+    # Log public key authentication attempt
     def check_auth_publickey(self, username, key):
-        fingerprint = hexlify(key.get_fingerprint())
+        fingerprint = hexlify(key.get_fingerprint()).decode(encoding="utf-8")
         logging.info(f"public key auth attempt ({self.client_ip}:{self.client_port}): username: {username}, key name {key.get_name()}, md5 fingerprint: {fingerprint}, base64: {key.get_base64()}, bits: {key.get_bits()}")
         return paramiko.AUTH_FAILED
 
-    # Check login attempt using password, and log the username and password used
+    # Log password authentication attempt
     def check_auth_password(self, username, password):
         logging.info(f"login attempt ({self.client_ip}:{self.client_port}): username: {username}, password: {password}")
         return paramiko.AUTH_FAILED
@@ -55,7 +57,7 @@ class HoneypotServer(paramiko.ServerInterface):
 def handle_connection(client_sock, client_addr):
     logging.info(f"new client connection: {client_addr[0]}:{client_addr[1]}")
     try:
-        # Create an SSH session over client socket
+        # Create object to store client socket
         transport = paramiko.Transport(client_sock)
         # Retrieve pre-generated key from file
         transport.add_server_key(SERVER_KEY)
@@ -64,7 +66,7 @@ def handle_connection(client_sock, client_addr):
         # Create SSH server interface
         ssh = HoneypotServer(client_addr)
         try:
-            # Start server with SSH server interface
+            # Start server with SSH server interface for client socket
             transport.start_server(server=ssh)
         except Exception as err:
             eprint("*** SSH negotiation failed")
@@ -100,13 +102,14 @@ def main():
         except Exception as err:
             eprint(f"*** Listen/accept failed: {err}")
             traceback.print_exc()
+        # Invoking new session for connnected client
         # Implement threading to handle mutliple SSH sessions
         new_thread = threading.Thread(target=handle_connection, args=(client_sock, client_addr))
         new_thread.start()
         threads.append(new_thread)
 
-    for thread in threads:
-        thread.join()
+        for thread in threads:
+            thread.join()
 
 if __name__ == "__main__":
     main()
