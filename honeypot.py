@@ -1,26 +1,37 @@
 #!/usr/bin/env python3
 
+import os
+import argparse
 import sys
 import socket       # Network sockets
 import paramiko     # SSH server
 import threading    # Multithreading
 import logging
 import base64
+import traceback
 from eprint import eprint
 from binascii import hexlify
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Constant variables
-HOST = "127.0.0.1"
-PORT = 2222
+# Default host and port set to localhost for testing
+HOST = os.getenv("HOST")
+PORT = int(os.getenv("PORT"))
 SERVER_KEY = paramiko.RSAKey(filename="server_key")
 SSH_BANNER = "SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.1"
 
 # Setting up logging format for paramiko
 logging.basicConfig(
-        #format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        level=logging.INFO)
-        #filename="ssh_honeypot.log")
+    #format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+    handlers=[
+        logging.FileHandler("ssh_honeypot.log"),
+        logging.StreamHandler()
+    ]
+)
 
 # Defining honeypot attributes
 class HoneypotServer(paramiko.ServerInterface):
@@ -96,7 +107,7 @@ def main():
     while True:
         try:
             server_sock.listen(100)
-            print("Listening for connection...")
+            print(f"Listening for connection on port {PORT}...")
             # Get connected client's IP address and port number
             client_sock, client_addr = server_sock.accept()
         except Exception as err:
