@@ -41,17 +41,11 @@ class HoneypotServer(paramiko.ServerInterface):
 
     # Defining server interface methods
     # BEGIN
-    #def check_channel_request(self, kind, chanid):
-    #    logging.info(f"client called check_channel_request({self.client_ip}:{self.client_port}): {kind}")
-    #    if kind == "session":
-    #        return paramiko.OPEN_SUCCEEDED
-
     def get_allowed_auths(self, username):
-        #logging.info(f"client requesting auth methods ({self.client_ip}:{self.client_port}): username {username}")
         return "publickey,password"
 
     def check_auth_none(self, username):
-        logging.info(f"no auth login attempt ({self.client_ip}:{self.client_port}: username: {username})")
+        logging.info(f"no auth attempt ({self.client_ip}:{self.client_port}): username: {username}")
 
     # Log public key authentication attempt
     def check_auth_publickey(self, username, key):
@@ -61,7 +55,7 @@ class HoneypotServer(paramiko.ServerInterface):
 
     # Log password authentication attempt
     def check_auth_password(self, username, password):
-        logging.info(f"login attempt ({self.client_ip}:{self.client_port}): username: {username}, password: {password}")
+        logging.info(f"password auth attempt ({self.client_ip}:{self.client_port}): username: {username}, password: {password}")
         return paramiko.AUTH_FAILED
     # END
 
