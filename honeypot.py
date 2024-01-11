@@ -9,9 +9,11 @@ import threading    # Multithreading
 import logging
 import base64
 import traceback
-from eprint import eprint
 from binascii import hexlify
 from dotenv import load_dotenv
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 load_dotenv()
 
@@ -24,8 +26,8 @@ SSH_BANNER = "SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.1"
 
 # Setting up logging format for paramiko
 logging.basicConfig(
-    #format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    format="%(asctime)s - %(levelname)s - %(message)s",
+    format="%(asctime)s -- %(levelname)s -- %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
     level=logging.INFO,
     handlers=[
         logging.FileHandler("ssh_honeypot.log"),
@@ -45,22 +47,22 @@ class HoneypotServer(paramiko.ServerInterface):
         return "publickey,password"
 
     def check_auth_none(self, username):
-        logging.info(f"no auth attempt ({self.client_ip}:{self.client_port}): username: {username}")
+        logging.info(f"no auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{username}'")
 
     # Log public key authentication attempt
     def check_auth_publickey(self, username, key):
         fingerprint = hexlify(key.get_fingerprint()).decode(encoding="utf-8")
-        logging.info(f"public key auth attempt ({self.client_ip}:{self.client_port}): username: {username}, key name {key.get_name()}, md5 fingerprint: {fingerprint}, base64: {key.get_base64()}, bits: {key.get_bits()}")
+        logging.info(f"public key auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{username}' -- key name '{key.get_name()}' -- md5 fingerprint: '{fingerprint}' -- base64: '{key.get_base64()}' -- bits: {key.get_bits()}")
         return paramiko.AUTH_FAILED
 
     # Log password authentication attempt
     def check_auth_password(self, username, password):
-        logging.info(f"password auth attempt ({self.client_ip}:{self.client_port}): username: {username}, password: {password}")
+        logging.info(f"password auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{username}' -- password: '{password}'")
         return paramiko.AUTH_FAILED
     # END
 
 def handle_connection(client_sock, client_addr):
-    logging.info(f"new client connection: {client_addr[0]}:{client_addr[1]}")
+    logging.info(f"new client connection -- ip address: {client_addr[0]} -- port: {client_addr[1]}")
     try:
         # Create object to store client socket
         transport = paramiko.Transport(client_sock)

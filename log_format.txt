@@ -1,0 +1,22 @@
+Row n: key:value,key:value
+
+Geolocation Logs (Log geolocations of logins and number of attempts per country):
+Label Format: country ip_address
+Log Format: label:str,ip_address:str,latitude:int,longitude:int,country:str,timestamp:str/time
+
+Username Logs (Log unique username and IP addresses with number of login attempts by username and by ip address):
+Label Format: username ip_address
+Log Format: label:str,ip_address:str,username:str,timestamp:str/time
+
+Password Authentication Logs (Log username and password combinations with number of login attempts by password and by username password combination):
+Label Format: username password ip_address
+Log Format: label:str,ip_address:str,username:str,password:str,timestamp:str/time
+
+Public Key Authentication Logs (Log username and public key info with number of keys using a specific algorithm):
+Label Format: username fingerprint(first 5 chars) ip_address
+Log Format: label:str,ip_address:str,username:str,key_name:str,fingerprint:str,base64:str,bits:int,timestamp:str/time
+
+Auth Type Logs (Log authentication logs with number of password or public key authentication attempts)
+Label Format: username auth_type ip_address
+Log Format: label:str,ip_address:str,username:str,auth_type:str,timestamp:str/time
+
