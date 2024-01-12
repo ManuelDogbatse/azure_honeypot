@@ -25,30 +25,23 @@ get_ssh_logs() {
 get_ssh_logs "./ssh_honeypot.log"
 
 geo_log="${connection_logs[0]}"
+# Trim space in awk function
 trim_space='{for (i=1; i <= NF; i++) {
     gsub(/^[ \t]+/,"",$i)
     gsub(/[ \t]+$/,"",$i)
-} }' 
-geo_log_awk='{print $0}'
-geo_log_awk_final="$trim_space $geo_log_awk"
-echo "$geo_log" | awk -F '--' "$geo_log_awk_final"
-#echo "New Connection Logs:"
-#for line in "${connection_logs[@]}"
-#do
-#    echo $line
-#done
-#echo ""
-#
-#echo "Password Authentication Logs:"
-#for line in "${passwd_auth_logs[@]}"
-#do
-#    echo $line
-#done
-#echo ""
-#
-#echo "Public Key Authentication Logs:"
-#for line in "${pub_key_auth_logs[@]}"
-#do
-#   echo $line
-#done
-#echo ""
+} }'
+# Print all columns in awk function
+print_columns='{for (i=1; i <= NF; i++) {
+    print $i
+} }'
+geo_log_awk="$trim_space $print_columns"
+IFS=$'\n' read -r -d '' -a geo_log_arr < <(echo "$geo_log" | awk -F '--' "$geo_log_awk")
+#geo_log_arr=( $(echo "$geo_log" | awk -F '--' "$geo_log_awk") ) 
+echo "Arr: ${geo_log_arr[0]}"
+#echo "Message: $msg"
+#passwd_log="${passwd_auth_logs[0]}"
+#passwd_log_awk="$trim_space $print_all"
+#echo "$passwd_log" | awk -F '--' "$passwd_log_awk"
+#pub_key_log="${pub_key_auth_logs[0]}"
+#pub_key_log_awk="$trim_space $print_all"
+#echo "$pub_key_log" | awk -F '--' "$pub_key_log_awk"
