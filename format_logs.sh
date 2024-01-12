@@ -41,7 +41,7 @@ format_geo_logs() {
     longitude=25.0000
     geo_logs+=("label:$label,ip_address:${geo_log_arr[3]},latitude:$latitude,longitude:$longitude,country:$country,timestamp:${geo_log_arr[0]}")
     #write_to_file "${geo_logs[-1]}" "./geo.log"
-    echo "${geo_logs[-1]}"
+    #echo "${geo_logs[-1]}"
 }
 
 # Format username logs
@@ -54,10 +54,24 @@ format_uname_logs() {
     uname_log_arr[5]=$(echo "${uname_log_arr[5]}" | grep -Po "$REGEXP_INPUT")
     label="${uname_log_arr[5]} ${uname_log_arr[3]}"
     uname_logs+=("label:$label,ip_address:${uname_log_arr[3]},username:${uname_log_arr[5]},timestamp:${geo_log_arr[0]}")
-    write_to_file "${uname_logs[-1]}" "./uname.log"
-    echo "${uname_logs[-1]}"
+    #write_to_file "${uname_logs[-1]}" "./uname.log"
+    #echo "${uname_logs[-1]}"
 }
 
+# Format password authentication logs
+format_passwd_logs() {
+    # Split log by '--' and store each line as an item in an array
+    IFS=$'\n' read -r -d '' -a passwd_log_arr < <(echo "$1" | awk -F '--' "$AWK_COMMAND")
+    echo "${passwd_log_arr[@]}"
+    # Reformat IP address field
+    passwd_log_arr[3]=$(echo "${passwd_log_arr[3]}" | grep -Po "$REGEXP_STD")
+    # Reformat username field
+    passwd_log_arr[5]=$(echo "${passwd_log_arr[5]}" | grep -Po "$REGEXP_INPUT")
+    # Reformat password field
+    passwd_log_arr[6]=$(echo "${passwd_log_arr[6]}" | grep -Po "$REGEXP_INPUT")
+    label="${passwd_log_arr[5]} ${passwd_log_arr[6]} ${passwd_log_arr[3]}"
+    echo "label:$label,ip_address:${passwd_log_arr[3]},username:${passwd_log_arr[5]},password:${passwd_log_arr[6]},timestamp:${passwd_log_arr[0]}"
+}
 
 # Place desired logs in respective arrays
 get_ssh_logs() {
@@ -69,8 +83,7 @@ get_ssh_logs() {
             format_uname_logs "$line"
         elif [[ "$line" =~ .*"password auth attempt".* ]];
         then
-            declare -a passwd_auth_logs=()
-            passwd_auth_logs+=("$line")
+            format_passwd_logs "$line"
         elif [[ "$line" =~ .*"public key auth attempt".* ]];
         then
             declare -a pub_key_auth_logs=()
