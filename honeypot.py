@@ -61,7 +61,7 @@ class HoneypotServer(paramiko.ServerInterface):
     # Log public key authentication attempt
     def check_auth_publickey(self, username, key):
         fingerprint = hexlify(key.get_fingerprint()).decode(encoding="utf-8")
-        logging.info(f"public key auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{encode_string(username)}' -- key name {key.get_name()} -- md5 fingerprint: {encode_string(fingerprint)} -- base64: {key.get_base64()} -- bits: {key.get_bits()}")
+        logging.info(f"public key auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{encode_string(username)}' -- key name: {key.get_name()} -- md5 fingerprint: {encode_string(fingerprint)} -- base64: {key.get_base64()} -- bits: {key.get_bits()}")
         return paramiko.AUTH_FAILED
     # END
 
