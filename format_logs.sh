@@ -16,12 +16,9 @@ AWK_COMMAND="$TRIM_SPACE_COMMAND $PRINT_COLUMNS_COMMAND"
 REGEXP_STD="(?<=\:\s).*$"
 REGEXP_INPUT="(?<=').*(?='$)"
 
-# Log arrays
-declare -a geo_logs=()
-declare -a uname_logs=()
-declare -a passwd_logs=()
-declare -a pub_key_logs=()
-declare -a auth_type_logs=()
+decode_string() {
+    echo "$1" | sed -e 's/%%/%/g' | sed -e 's/%-/-/g' | sed -e 's/%'\''/'\''/g'
+}
 
 # Write logs to file
 write_to_file() {
@@ -39,9 +36,9 @@ format_geo_logs() {
     label="$country ${geo_log_arr[3]}"
     latitude=-4.0000
     longitude=25.0000
-    geo_logs+=("label:$label,ip_address:${geo_log_arr[3]},latitude:$latitude,longitude:$longitude,country:$country,timestamp:${geo_log_arr[0]}")
-    #write_to_file "${geo_logs[-1]}" "./geo.log"
-    #echo "${geo_logs[-1]}"
+    geo_log_str="label:$label,ip_address:${geo_log_arr[3]},latitude:$latitude,longitude:$longitude,country:$country,timestamp:${geo_log_arr[0]}"
+    #write_to_file "${geo_log_str" "./geo.log"
+    echo "$geo_log_str"
 }
 
 # Format username logs
@@ -53,24 +50,25 @@ format_uname_logs() {
     # Reformat username field
     uname_log_arr[5]=$(echo "${uname_log_arr[5]}" | grep -Po "$REGEXP_INPUT")
     label="${uname_log_arr[5]} ${uname_log_arr[3]}"
-    uname_logs+=("label:$label,ip_address:${uname_log_arr[3]},username:${uname_log_arr[5]},timestamp:${geo_log_arr[0]}")
-    #write_to_file "${uname_logs[-1]}" "./uname.log"
-    #echo "${uname_logs[-1]}"
+    uname_log_str="label:$label,ip_address:${uname_log_arr[3]},username:${uname_log_arr[5]},timestamp:${uname_log_arr[0]}"
+    #write_to_file "$uname_log_str" "./uname.log"
+    echo "$uname_log_str"
 }
 
 # Format password authentication logs
 format_passwd_logs() {
     # Split log by '--' and store each line as an item in an array
     IFS=$'\n' read -r -d '' -a passwd_log_arr < <(echo "$1" | awk -F '--' "$AWK_COMMAND")
-    echo "${passwd_log_arr[@]}"
     # Reformat IP address field
     passwd_log_arr[3]=$(echo "${passwd_log_arr[3]}" | grep -Po "$REGEXP_STD")
     # Reformat username field
-    passwd_log_arr[5]=$(echo "${passwd_log_arr[5]}" | grep -Po "$REGEXP_INPUT")
+    passwd_log_arr[5]=$(decode_string "$(echo "${passwd_log_arr[5]}" | grep -Po "$REGEXP_INPUT")" )
     # Reformat password field
-    passwd_log_arr[6]=$(echo "${passwd_log_arr[6]}" | grep -Po "$REGEXP_INPUT")
+    passwd_log_arr[6]=$(decode_string "$(echo "${passwd_log_arr[6]}" | grep -Po "$REGEXP_INPUT")" )
     label="${passwd_log_arr[5]} ${passwd_log_arr[6]} ${passwd_log_arr[3]}"
-    echo "label:$label,ip_address:${passwd_log_arr[3]},username:${passwd_log_arr[5]},password:${passwd_log_arr[6]},timestamp:${passwd_log_arr[0]}"
+    passwd_log_str="label:$label,ip_address:${passwd_log_arr[3]},username:${passwd_log_arr[5]},password:${passwd_log_arr[6]},timestamp:${passwd_log_arr[0]}"
+    #write_to_file "$passwd_log_str" "./passwd.log"
+    echo "$passwd_log_str"
 }
 
 # Place desired logs in respective arrays

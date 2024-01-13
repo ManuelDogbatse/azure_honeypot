@@ -3,6 +3,7 @@
 import os
 import argparse
 import sys
+import re
 import socket       # Network sockets
 import paramiko     # SSH server
 import threading    # Multithreading
@@ -12,10 +13,13 @@ import traceback
 from binascii import hexlify
 from dotenv import load_dotenv
 
+load_dotenv()
+
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-load_dotenv()
+def encode_string(string):
+    return re.sub("'", "%'", re.sub("-", "%-", re.sub("%", "%%", string)))
 
 # Constant variables
 # Default host and port set to localhost for testing
@@ -47,17 +51,17 @@ class HoneypotServer(paramiko.ServerInterface):
         return "publickey,password"
 
     def check_auth_none(self, username):
-        logging.info(f"no auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{username}'")
+        logging.info(f"no auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{encode_string(username)}'")
+
+    # Log password authentication attempt
+    def check_auth_password(self, username, password):
+        logging.info(f"password auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{encode_string(username)}' -- password: '{encode_string(password)}'")
+        return paramiko.AUTH_FAILED
 
     # Log public key authentication attempt
     def check_auth_publickey(self, username, key):
         fingerprint = hexlify(key.get_fingerprint()).decode(encoding="utf-8")
-        logging.info(f"public key auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{username}' -- key name '{key.get_name()}' -- md5 fingerprint: '{fingerprint}' -- base64: '{key.get_base64()}' -- bits: {key.get_bits()}")
-        return paramiko.AUTH_FAILED
-
-    # Log password authentication attempt
-    def check_auth_password(self, username, password):
-        logging.info(f"password auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{username}' -- password: '{password}'")
+        logging.info(f"public key auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{encode_string(username)}' -- key name {key.get_name()} -- md5 fingerprint: {encode_string(fingerprint)} -- base64: {key.get_base64()} -- bits: {key.get_bits()}")
         return paramiko.AUTH_FAILED
     # END
 
