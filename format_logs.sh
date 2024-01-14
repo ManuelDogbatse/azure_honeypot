@@ -38,7 +38,7 @@ format_geo_log() {
     latitude=-4.0000
     longitude=25.0000
     geo_log_str="label:$label,ip_address:${geo_log_arr[3]},latitude:$latitude,longitude:$longitude,country:$country,timestamp:${geo_log_arr[0]}"
-    #write_to_file "${geo_log_str" "./geo.log"
+    write_to_file "$geo_log_str" "./geo.log"
     #echo "$geo_log_str"
 }
 
@@ -49,11 +49,11 @@ format_uname_log() {
     # Reformat IP address field
     uname_log_arr[3]=$(echo "${uname_log_arr[3]}" | grep -Po "$REGEXP_STD")
     # Reformat username field
-    uname_log_arr[5]=$(echo "${uname_log_arr[5]}" | grep -Po "$REGEXP_INPUT")
+    uname_log_arr[5]=$(decode_string "$(echo "${uname_log_arr[5]}" | grep -Po "$REGEXP_INPUT")" )
     #label="${uname_log_arr[5]} ${uname_log_arr[3]}"
     label="uname_log"
     uname_log_str="label:$label,ip_address:${uname_log_arr[3]},username:${uname_log_arr[5]},timestamp:${uname_log_arr[0]}"
-    #write_to_file "$uname_log_str" "./uname.log"
+    write_to_file "$uname_log_str" "./uname.log"
     #echo "$uname_log_str"
 }
 
@@ -70,7 +70,7 @@ format_passwd_log() {
     #label="${passwd_log_arr[5]} ${passwd_log_arr[6]} ${passwd_log_arr[3]}"
     label="passwd_log"
     passwd_log_str="label:$label,ip_address:${passwd_log_arr[3]},username:${passwd_log_arr[5]},password:${passwd_log_arr[6]},timestamp:${passwd_log_arr[0]}"
-    #write_to_file "$passwd_log_str" "./passwd.log"
+    write_to_file "$passwd_log_str" "./passwd.log"
     #echo "$passwd_log_str"
 }
 
@@ -92,7 +92,7 @@ format_pub_key_log() {
     pub_key_log_arr[9]=$(echo "${pub_key_log_arr[9]}" | grep -Po "$REGEXP_STD")
     label="pub_key_log"
     pub_key_log_str="label:$label,ip_address:${pub_key_log_arr[3]},username:${pub_key_log_arr[5]},key_name:${pub_key_log_arr[6]},fingerprint:${pub_key_log_arr[7]},base64:${pub_key_log_arr[8]},bits:${pub_key_log_arr[9]},timestamp:${pub_key_log_arr[0]}"
-    #write_to_file "$pub_key_log_str" "./pub_key.log"
+    write_to_file "$pub_key_log_str" "./pub_key.log"
     #echo "$pub_key_log_str"
 }
 
@@ -111,8 +111,8 @@ format_auth_type_log() {
     esac
     label="auth_type"
     auth_type_log_str="label:$label,ip_address:${auth_type_log_arr[3]},username:${auth_type_log_arr[5]},auth_type:$auth_type,timestamp:${auth_type_log_arr[0]}"
-    #write_to_file "$auth_type_log_str" "./auth_type.log"
-    echo "$auth_type_log_str"
+    write_to_file "$auth_type_log_str" "./auth_type.log"
+    #echo "$auth_type_log_str"
 }
 
 # Place desired logs in respective arrays
