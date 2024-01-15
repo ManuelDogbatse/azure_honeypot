@@ -27,6 +27,7 @@ HOST = os.getenv("HOST")
 PORT = int(os.getenv("PORT"))
 SERVER_KEY = paramiko.RSAKey(filename="server_key")
 SSH_BANNER = "SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.1"
+LOG_FILE = "ssh_logs.log"
 
 # Setting up logging format for paramiko
 logging.basicConfig(
@@ -34,7 +35,7 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
     level=logging.INFO,
     handlers=[
-        logging.FileHandler("ssh_honeypot.log"),
+        logging.FileHandler(LOG_FILE),
         logging.StreamHandler()
     ]
 )
