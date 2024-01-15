@@ -39,6 +39,7 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+logging.getLogger("paramiko").propagate = False
 
 # Defining honeypot attributes
 class HoneypotServer(paramiko.ServerInterface):
@@ -51,8 +52,8 @@ class HoneypotServer(paramiko.ServerInterface):
     def get_allowed_auths(self, username):
         return "publickey,password"
 
-    def check_auth_none(self, username):
-        logging.info(f"no auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{encode_string(username)}'")
+    #def check_auth_none(self, username):
+    #    logging.info(f"no auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{encode_string(username)}'")
 
     # Log password authentication attempt
     def check_auth_password(self, username, password):
@@ -67,7 +68,7 @@ class HoneypotServer(paramiko.ServerInterface):
     # END
 
 def handle_connection(client_sock, client_addr):
-    logging.info(f"new client connection -- ip address: {client_addr[0]} -- port: {client_addr[1]}")
+    print(f"new client connection -- ip address: {client_addr[0]} -- port: {client_addr[1]}")
     try:
         # Create object to store client socket
         transport = paramiko.Transport(client_sock)

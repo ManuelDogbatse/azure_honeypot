@@ -1,5 +1,6 @@
 #!/bin/bash
 
+LOG_FILE="./ssh_logs.log"
 # Get API key from .env file
 ENV="./.env"
 API_KEY="$(sed -n '/IPGEO_API_KEY/p' "$ENV" | awk -F '"' '{print $2}')"
@@ -103,4 +104,20 @@ format_ssh_logs() {
         fi
     done < "$1"
 }
-format_ssh_logs "./ssh_logs.log"
+
+format_ssh_logs_realtime() {
+    while inotifywait -qq -e modify "$1"
+    do
+        line="$(tail -n1 "$1")"
+        if [[ "$line" =~ .*"password auth attempt".* ]];
+        then
+            format_password_log "$line"
+        elif [[ "$line" =~ .*"public key auth attempt".* ]];
+        then
+            format_public_key_log "$line"
+        fi
+    done
+}
+
+#format_ssh_logs "$LOG_FILE"
+format_ssh_logs_realtime "$LOG_FILE"
