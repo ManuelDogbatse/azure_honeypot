@@ -22,6 +22,7 @@ AWK_COMMAND="$TRIM_SPACE_COMMAND $PRINT_COLUMNS_COMMAND"
 REGEXP_STD="(?<=\:\s).*$"
 REGEXP_INPUT="(?<=').*(?='$)"
 
+# Decode custom '%' symbol encoding used to prevent user input from interfering with log parsing
 decode_string() {
     echo "$1" | sed -e 's/%%/%/g' | sed -e 's/%-/-/g' | sed -e 's/%'\''/'\''/g'
 }
@@ -36,11 +37,8 @@ format_password_log() {
     # Split log by '--' and store each line as an item in an array
     IFS=$'\n' read -r -d '' -a password_log_arr < <(echo "$1" | awk -F '--' "$AWK_COMMAND")
     timestamp="${password_log_arr[0]}"
-    # Reformat IP address value
     ip_address="$(echo "${password_log_arr[3]}" | grep -Po "$REGEXP_STD")"
-    # Reformat username value
     username="$(decode_string "$(echo "${password_log_arr[5]}" | grep -Po "$REGEXP_INPUT")" )"
-    # Reformat password value
     password="$(decode_string "$(echo "${password_log_arr[6]}" | grep -Po "$REGEXP_INPUT")" )"
     label="${username:0:10} $ip_address $timestamp"
 
@@ -63,17 +61,11 @@ format_public_key_log() {
     # Split log by '--' and store each line as an item in an array
     IFS=$'\n' read -r -d '' -a public_key_log_arr < <(echo "$1" | awk -F '--' "$AWK_COMMAND")
     timestamp="${public_key_log_arr[0]}"
-    # Reformat IP address value
     ip_address="$(echo "${public_key_log_arr[3]}" | grep -Po "$REGEXP_STD")"
-    # Reformat username value
     username="$(decode_string "$(echo "${public_key_log_arr[5]}" | grep -Po "$REGEXP_INPUT")" )"
-    # Reformat key name field
     key_type=$(echo "${public_key_log_arr[6]}" | grep -Po "$REGEXP_STD")
-    # Reformat fingerprint field
     fingerprint=$(echo "${public_key_log_arr[7]}" | grep -Po "$REGEXP_STD")
-    # Reformat base64 field
     base64=$(echo "${public_key_log_arr[8]}" | grep -Po "$REGEXP_STD")
-    # Reformat bits field
     bits=$(echo "${public_key_log_arr[9]}" | grep -Po "$REGEXP_STD")
     label="${username:0:10} $ip_address $timestamp"
      
@@ -91,33 +83,39 @@ IFS=$'\n' read -r -d '' latitude longitude country < <(echo "$response" | jq -r 
     echo "$public_key_log_str"
 }
 
-# Place desired logs in respective arrays
+# Format SSH logs based on the type of authentication used
 format_ssh_logs() {
+    if [[ "$1" =~ .*"password auth attempt".* ]];
+    then
+        format_password_log "$1"
+    elif [[ "$1" =~ .*"public key auth attempt".* ]];
+    then
+        format_public_key_log "$1"
+    fi
+}
+
+# Read log file line by line and format each log
+read_log_file() {
     while IFS='\n' read -r line
     do
-        if [[ "$line" =~ .*"password auth attempt".* ]];
-        then
-            format_password_log "$line"
-        elif [[ "$line" =~ .*"public key auth attempt".* ]];
-        then
-            format_public_key_log "$line"
-        fi
+        format_ssh_logs "$line"
     done < "$1"
 }
 
-format_ssh_logs_realtime() {
+# Format the latest log from the log file
+format_log_on_modify() {
+    line="$(tail -n1 "$1")"
+    format_ssh_logs "$line"
+}
+
+# Listen to modifications to the log file and format the latest line when added
+tail_log_file() {
     while inotifywait -qq -e modify "$1"
     do
-        line="$(tail -n1 "$1")"
-        if [[ "$line" =~ .*"password auth attempt".* ]];
-        then
-            format_password_log "$line"
-        elif [[ "$line" =~ .*"public key auth attempt".* ]];
-        then
-            format_public_key_log "$line"
-        fi
+        # Run each modification in the background for parallelisation
+        format_log_on_modify "$1" &
     done
 }
 
-#format_ssh_logs "$LOG_FILE"
-format_ssh_logs_realtime "$LOG_FILE"
+#read_log_file "$LOG_FILE"
+tail_log_file "$LOG_FILE"

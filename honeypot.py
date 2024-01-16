@@ -1,28 +1,20 @@
 #!/usr/bin/env python3
 
 import os
-import argparse
 import sys
 import re
-import socket       # Network sockets
-import paramiko     # SSH server
-import threading    # Multithreading
+import socket
+import paramiko
+import threading
 import logging
 import base64
 import traceback
 from binascii import hexlify
 from dotenv import load_dotenv
 
-load_dotenv()
-
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
-def encode_string(string):
-    return re.sub("'", "%'", re.sub("-", "%-", re.sub("%", "%%", string)))
-
 # Constant variables
 # Default host and port set to localhost for testing
+load_dotenv()
 HOST = os.getenv("HOST")
 PORT = int(os.getenv("PORT"))
 SERVER_KEY = paramiko.RSAKey(filename="server_key")
@@ -41,6 +33,14 @@ logging.basicConfig(
 )
 logging.getLogger("paramiko").propagate = False
 
+# Print message in stderr output stream
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+# Encode user input with custom '%' symbol encoding to prevent user input from interfering with log parsing
+def encode_string(string):
+    return re.sub("'", "%'", re.sub("-", "%-", re.sub("%", "%%", string)))
+
 # Defining honeypot attributes
 class HoneypotServer(paramiko.ServerInterface):
     # Get client's IP address and port number
@@ -48,12 +48,8 @@ class HoneypotServer(paramiko.ServerInterface):
         (self.client_ip, self.client_port) = client_addr
 
     # Defining server interface methods
-    # BEGIN
     def get_allowed_auths(self, username):
         return "publickey,password"
-
-    #def check_auth_none(self, username):
-    #    logging.info(f"no auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{encode_string(username)}'")
 
     # Log password authentication attempt
     def check_auth_password(self, username, password):
@@ -67,6 +63,7 @@ class HoneypotServer(paramiko.ServerInterface):
         return paramiko.AUTH_FAILED
     # END
 
+# Handle new connection to SSH server
 def handle_connection(client_sock, client_addr):
     print(f"new client connection -- ip address: {client_addr[0]} -- port: {client_addr[1]}")
     try:
@@ -76,7 +73,7 @@ def handle_connection(client_sock, client_addr):
         transport.add_server_key(SERVER_KEY)
         # Change the banner to appear more convincing
         transport.local_version = SSH_BANNER
-        # Create SSH server interface
+        # Create SSH server interface for client socket
         ssh = HoneypotServer(client_addr)
         try:
             # Start server with SSH server interface for client socket
