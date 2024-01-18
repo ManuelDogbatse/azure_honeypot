@@ -1,0 +1,22 @@
+version: "3"
+services:
+  honeypot:
+    container_name: honeypot
+    build:
+      context: .
+      dockerfile: honeypot/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "2222:2222"
+    volumes:
+      - ./logs:/src/app/logs
+  log_formatter:
+    container_name: log_formatter
+    build:
+      context: .
+      dockerfile: log_formatter/Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/src/app/logs

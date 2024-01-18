@@ -2,3 +2,5 @@ venv
 server_key*
 .env
 ssh_logs.log
+ssh_p*
+remove_old_key

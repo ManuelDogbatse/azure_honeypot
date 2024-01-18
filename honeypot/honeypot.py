@@ -10,16 +10,15 @@ import logging
 import base64
 import traceback
 from binascii import hexlify
-from dotenv import load_dotenv
 
 # Constant variables
 # Default host and port set to localhost for testing
-load_dotenv()
-HOST = os.getenv("HOST")
-PORT = int(os.getenv("PORT"))
+HOST = os.environ["HOST"]
+PORT = int(os.environ["PORT"])
+
 SERVER_KEY = paramiko.RSAKey(filename="server_key")
 SSH_BANNER = "SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.1"
-LOG_FILE = "ssh_logs.log"
+LOG_FILE = "logs/ssh_logs.log"
 
 # Setting up logging format for paramiko
 logging.basicConfig(
@@ -107,6 +106,7 @@ def main():
         try:
             server_sock.listen(100)
             print(f"Listening for connection on port {PORT}...")
+            print(f"IP address: {HOST}")
             # Get connected client's IP address and port number
             client_sock, client_addr = server_sock.accept()
         except Exception as err:

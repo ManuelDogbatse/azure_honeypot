@@ -1,9 +1,7 @@
 #!/bin/bash
 
-LOG_FILE="./ssh_logs.log"
-# Get API key from .env file
-ENV="./.env"
-API_KEY="$(sed -n '/IPGEO_API_KEY/p' "$ENV" | awk -F '"' '{print $2}')"
+LOG_FILE="ssh_logs.log"
+LOG_DIR="logs/"
 TEST_IP_ADDR="1.1.1.1"
 
 # awk functions
@@ -29,7 +27,7 @@ decode_string() {
 
 # Write logs to file
 write_to_file() {
-    echo "$1" >> "$2"
+    echo "$1" >> "${LOG_DIR}$2"
 }
 
 # Format password authentication logs
@@ -44,16 +42,16 @@ format_password_log() {
 
     # Make API call to IP geolocation website to retrieve latitude, longitude, and country
     # Uncomment the line below when hosted publicly
-    #response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${API_KEY}&ip=${ip_address}")
+    #response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${ip_address}")
     # Comment the line below when hosted publicly
-    response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${API_KEY}&ip=${TEST_IP_ADDR}")
+    response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${TEST_IP_ADDR}")
     # Pass values in JSON object to variables
 IFS=$'\n' read -r -d '' latitude longitude country < <(echo "$response" | jq -r '.latitude,.longitude,.country_name')
 
     # Create new log for syslog server and write to log file
     password_log_str="label:$label,ip_address:$ip_address,latitude:$latitude,longitude:$longitude,country:$country,username:$username,password:$password,timestamp:$timestamp"
-    #write_to_file "$password_log_str" "./ssh_password_logins.log"
-    echo "$password_log_str"
+    write_to_file "$password_log_str" "./ssh_password_logins.log"
+    #echo "$password_log_str"
 }
 
 # Format public key authentication logs
@@ -71,16 +69,16 @@ format_public_key_log() {
      
     # Make API call to IP geolocation website to retrieve latitude, longitude, and country
     # Uncomment the line below when hosted publicly
-    #response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${API_KEY}&ip=${ip_address}")
+    #response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${ip_address}")
     # Comment the line below when hosted publicly
-    response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${API_KEY}&ip=${TEST_IP_ADDR}")
+    response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${TEST_IP_ADDR}")
     # Pass values in JSON object to variables
 IFS=$'\n' read -r -d '' latitude longitude country < <(echo "$response" | jq -r '.latitude,.longitude,.country_name')
 
     # Create new log for syslog server and write to log file
     public_key_log_str="label:$label,ip_address:$ip_address,latitude:$latitude,longitude:$longitude,country:$country,username:$username,key_type:$key_type,fingerprint:$fingerprint,base64:$base64,bits:$bits,timestamp:$timestamp"
-    #write_to_file "$public_key_log_str" "./ssh_public_key_logins.log"
-    echo "$public_key_log_str"
+    write_to_file "$public_key_log_str" "./ssh_public_key_logins.log"
+    #echo "$public_key_log_str"
 }
 
 # Format SSH logs based on the type of authentication used
@@ -117,5 +115,5 @@ tail_log_file() {
     done
 }
 
-#read_log_file "$LOG_FILE"
-tail_log_file "$LOG_FILE"
+#read_log_file "${LOG_DIR}${LOG_FILE}"
+tail_log_file "${LOG_DIR}$LOG_FILE"
