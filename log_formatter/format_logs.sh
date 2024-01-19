@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Constant variables
 LOG_FILE="ssh_logs.log"
 LOG_DIR="logs/"
 TEST_IP_ADDR="1.1.1.1"
@@ -34,6 +35,7 @@ write_to_file() {
 format_password_log() {
     # Split log by '--' and store each line as an item in an array
     IFS=$'\n' read -r -d '' -a password_log_arr < <(echo "$1" | awk -F '--' "$AWK_COMMAND")
+    # Reformat each log value
     timestamp="${password_log_arr[0]}"
     ip_address="$(echo "${password_log_arr[3]}" | grep -Po "$REGEXP_STD")"
     username="$(decode_string "$(echo "${password_log_arr[5]}" | grep -Po "$REGEXP_INPUT")" )"
@@ -58,6 +60,7 @@ IFS=$'\n' read -r -d '' latitude longitude country < <(echo "$response" | jq -r 
 format_public_key_log() {
     # Split log by '--' and store each line as an item in an array
     IFS=$'\n' read -r -d '' -a public_key_log_arr < <(echo "$1" | awk -F '--' "$AWK_COMMAND")
+    # Reformat each log value
     timestamp="${public_key_log_arr[0]}"
     ip_address="$(echo "${public_key_log_arr[3]}" | grep -Po "$REGEXP_STD")"
     username="$(decode_string "$(echo "${public_key_log_arr[5]}" | grep -Po "$REGEXP_INPUT")" )"
@@ -82,7 +85,7 @@ IFS=$'\n' read -r -d '' latitude longitude country < <(echo "$response" | jq -r 
 }
 
 # Format SSH logs based on the type of authentication used
-format_ssh_logs() {
+format_ssh_log() {
     if [[ "$1" =~ .*"password auth attempt".* ]];
     then
         format_password_log "$1"
@@ -96,14 +99,14 @@ format_ssh_logs() {
 read_log_file() {
     while IFS='\n' read -r line
     do
-        format_ssh_logs "$line"
+        format_ssh_log "$line"
     done < "$1"
 }
 
 # Format the latest log from the log file
 format_log_on_modify() {
     line="$(tail -n1 "$1")"
-    format_ssh_logs "$line"
+    format_ssh_log "$line"
 }
 
 # Listen to modifications to the log file and format the latest line when added
@@ -115,5 +118,7 @@ tail_log_file() {
     done
 }
 
+# Uncomment line below and comment line 3 lines below to reformat all logged SSH login attempts
 #read_log_file "${LOG_DIR}${LOG_FILE}"
+# Uncomment line below and comment line above to reformat every SSH login attempt in real time
 tail_log_file "${LOG_DIR}$LOG_FILE"

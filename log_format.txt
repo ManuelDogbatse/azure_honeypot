@@ -1,7 +1,0 @@
-Password Authentication Logs:
-Label Format: username(first 10) ip_address timestamp
-Log Format: label:str,ip_address:str,latitude:int,longitude:int,country:str,country_code:str,username:str,password:str,timestamp:str/time
-
-Public Key Authentication Logs:
-Label Format: username(first 10) ip_address timestamp
-Log Format: label:str,ip_address:str,latitude:int,longitude:int,country:str,country_code:str,username:str,key_type:str,fingerprint:str,base64:str,bits:int,timestamp:str/time

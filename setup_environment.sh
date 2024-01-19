@@ -10,6 +10,7 @@ update_ip() {
         echo "Would you like to update the IP address? (y/n)"
         read input
         replace_ip="$(echo "$input" | awk '{print tolower($0)}')"
+        # Update IP address to '0.0.0.0' if user agrees to do so
         if [[ "$replace_ip" == 'y' ]]
         then
             echo "Updating IP address"
@@ -29,7 +30,7 @@ update_ip() {
 update_port() {
     port=""
     re='^[0-9]+$'
-    # Loop until user inputs a number between 1024 and 49151
+    # Loop until user inputs a number between 1024 and 49151 or the user presses enter to skip
     while [[ ! "$port" =~ $re ]] || ! [[ "$port" -ge "1024" && "$port" -le "49151" ]] 
     do
         echo "Please enter a port number for the server (1024-49151). Press Enter to skip:"
@@ -74,7 +75,7 @@ update_server_keys() {
     if [[ $(find "$(pwd)" -maxdepth 1 -name "server_key*") ]] 
     then
         replace_keys=""
-        # Loop until user enters 'y' for yes or 'n' for no
+        # Loop until user either agrees or disagrees to replace the keys
         while [[ "$replace_keys" != 'y' && "$replace_keys" != 'n' ]]
         do
             echo "SSH server keys already exist."
@@ -94,12 +95,14 @@ update_server_keys() {
             fi
         done
     else
+        # Generate new public and private keys
         echo "Generating public and private keys for SSH server..."
         ssh-keygen -t rsa -b 3072 -f server_key -q -N ""
         printf "SSH keys successfully generated\n\n"
     fi
 }
 
+# Main functions
 update_ip
 update_port
 update_api_key
