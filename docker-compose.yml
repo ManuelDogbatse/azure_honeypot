@@ -5,14 +5,14 @@ services:
     build:
       context: .
       dockerfile: honeypot/Dockerfile
+      args:
+        - PORT=${PORT}
     env_file:
       - .env
     ports:
       - "${PORT}:${PORT}"
     volumes:
       - ./logs:/src/app/logs
-    args:
-      - PORT=${PORT}
   log_formatter:
     container_name: log_formatter
     build:
