@@ -19,12 +19,6 @@ AWK_COMMAND="$TRIM_SPACE_COMMAND $PRINT_COLUMNS_COMMAND"
 
 # Regular expressions for log values
 REGEXP_STD="(?<=\:\s).*$"
-REGEXP_INPUT="(?<=').*(?='$)"
-
-# Decode custom '%' symbol encoding used to prevent user input from interfering with log parsing
-decode_string() {
-    echo "$1" | sed -e 's/%%/%/g' | sed -e 's/%-/-/g' | sed -e 's/%'\''/'\''/g'
-}
 
 # Write logs to file
 write_to_file() {
@@ -38,8 +32,8 @@ format_password_log() {
     # Reformat each log value
     timestamp="${password_log_arr[0]}"
     ip_address="$(echo "${password_log_arr[3]}" | grep -Po "$REGEXP_STD")"
-    username="$(decode_string "$(echo "${password_log_arr[5]}" | grep -Po "$REGEXP_INPUT")" )"
-    password="$(decode_string "$(echo "${password_log_arr[6]}" | grep -Po "$REGEXP_INPUT")" )"
+    username="$(echo "${password_log_arr[5]}" | grep -Po "$REGEXP_STD")"
+    password="$(echo "${password_log_arr[6]}" | grep -Po "$REGEXP_STD")"
     label="${username:0:10} $ip_address $timestamp"
 
     # Make API call to IP geolocation website to retrieve latitude, longitude, and country
@@ -63,7 +57,7 @@ format_public_key_log() {
     # Reformat each log value
     timestamp="${public_key_log_arr[0]}"
     ip_address="$(echo "${public_key_log_arr[3]}" | grep -Po "$REGEXP_STD")"
-    username="$(decode_string "$(echo "${public_key_log_arr[5]}" | grep -Po "$REGEXP_INPUT")" )"
+    username="$(echo "${public_key_log_arr[5]}" | grep -Po "$REGEXP_STD")"
     key_type=$(echo "${public_key_log_arr[6]}" | grep -Po "$REGEXP_STD")
     fingerprint=$(echo "${public_key_log_arr[7]}" | grep -Po "$REGEXP_STD")
     base64=$(echo "${public_key_log_arr[8]}" | grep -Po "$REGEXP_STD")

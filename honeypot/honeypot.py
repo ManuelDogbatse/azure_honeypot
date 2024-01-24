@@ -7,8 +7,8 @@ import socket
 import paramiko
 import threading
 import logging
-import base64
 import traceback
+from base64 import b64encode
 from binascii import hexlify
 
 # Constant variables
@@ -17,7 +17,8 @@ HOST = os.environ["HOST"]
 PORT = int(os.environ["PORT"])
 
 SERVER_KEY = paramiko.RSAKey(filename="server_key")
-SSH_BANNER = "SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.1"
+# Banner for Ubuntu 22.04
+SSH_BANNER = "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6"
 LOG_FILE = "logs/ssh_logs.log"
 
 # Setting up logging format for paramiko
@@ -36,9 +37,9 @@ logging.getLogger("paramiko").propagate = False
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-# Encode user input with custom '%' symbol encoding to prevent user input from interfering with log parsing
-def encode_string(string):
-    return re.sub("'", "%'", re.sub("-", "%-", re.sub("%", "%%", string)))
+# Encode user input with base64 encoding to avoid parsing errors
+def encode_string(str):
+    return b64encode(str.encode('utf-8')).decode('utf-8')
 
 # Defining honeypot attributes
 class HoneypotServer(paramiko.ServerInterface):
@@ -52,13 +53,18 @@ class HoneypotServer(paramiko.ServerInterface):
 
     # Log password authentication attempt
     def check_auth_password(self, username, password):
-        logging.info(f"password auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{encode_string(username)}' -- password: '{encode_string(password)}'")
+        b64_username = encode_string(username)
+        b64_password = encode_string(password)
+
+        logging.info(f"password auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: {b64_username} -- password: {b64_password}")
         return paramiko.AUTH_FAILED
 
     # Log public key authentication attempt
     def check_auth_publickey(self, username, key):
+        b_username = username.encode('utf-8')
+
         fingerprint = hexlify(key.get_fingerprint()).decode(encoding="utf-8")
-        logging.info(f"public key auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: '{encode_string(username)}' -- key name: {key.get_name()} -- md5 fingerprint: {encode_string(fingerprint)} -- base64: {key.get_base64()} -- bits: {key.get_bits()}")
+        logging.info(f"public key auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: {b64_username} -- key name: {key.get_name()} -- md5 fingerprint: {encode_string(fingerprint)} -- base64: {key.get_base64()} -- bits: {key.get_bits()}")
         return paramiko.AUTH_FAILED
 
 # Handle new connection to SSH server
