@@ -30,14 +30,14 @@ update_ip() {
 update_port() {
     port=""
     re='^[0-9]+$'
-    # Loop until user inputs a number between 1024 and 49151 or the user presses enter to skip
-    while [[ ! "$port" =~ $re ]] || ! [[ "$port" -ge "1024" && "$port" -le "49151" ]] 
+    # Loop until user inputs a number between 1 and 65535 or the user presses enter to skip
+    while [[ ! "$port" =~ $re ]] || ! [[ "$port" -ge "1" && "$port" -le "65535" ]] 
     do
-        echo "Please enter a port number for the server (1024-49151). Press Enter to skip:"
+        echo "Please enter a port number for the server (1-65535). Press Enter to skip:"
         read port
         if [[ "$port" =~ $re ]]
         then
-            if [[ "$port" -ge "1024" && "$port" -le "49151" ]]
+            if [[ "$port" -ge "1" && "$port" -le "65535" ]]
             then
                 echo "Changing port number to $port"
                 sed -i 's/PORT=[0-9]*/PORT='"$port"'/' "$ENV"

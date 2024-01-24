@@ -55,16 +55,14 @@ class HoneypotServer(paramiko.ServerInterface):
     def check_auth_password(self, username, password):
         b64_username = encode_string(username)
         b64_password = encode_string(password)
-
         logging.info(f"password auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: {b64_username} -- password: {b64_password}")
         return paramiko.AUTH_FAILED
 
     # Log public key authentication attempt
     def check_auth_publickey(self, username, key):
-        b_username = username.encode('utf-8')
-
-        fingerprint = hexlify(key.get_fingerprint()).decode(encoding="utf-8")
-        logging.info(f"public key auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: {b64_username} -- key name: {key.get_name()} -- md5 fingerprint: {encode_string(fingerprint)} -- base64: {key.get_base64()} -- bits: {key.get_bits()}")
+        b64_username = encode_string(username)
+        fingerprint = hexlify(key.get_fingerprint()).decode('utf-8')
+        logging.info(f"public key auth attempt -- ip address: {self.client_ip} -- port: {self.client_port} -- username: {b64_username} -- key name: {key.get_name()} -- md5 fingerprint: {fingerprint} -- base64: {key.get_base64()} -- bits: {key.get_bits()}")
         return paramiko.AUTH_FAILED
 
 # Handle new connection to SSH server
