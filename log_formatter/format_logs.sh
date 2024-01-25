@@ -20,6 +20,18 @@ AWK_COMMAND="$TRIM_SPACE_COMMAND $PRINT_COLUMNS_COMMAND"
 # Regular expressions for log values
 REGEXP_STD="(?<=\:\s).*$"
 
+# Return a base64 encoded string of the first ten characters of a string
+get_f10_chars_encoded() {
+    decoded="$(echo "$1" | base64 -d)"
+    if [[ ${#decoded} -lt 10 ]]
+    then
+        f10="${decoded:0:${#decoded}}"
+    else
+        f10="${decoded:0:10}"
+    fi
+    echo "$(echo "$f10" | base64)"
+}
+
 # Write logs to file
 write_to_file() {
     echo "$1" >> "${LOG_DIR}$2"
@@ -34,7 +46,7 @@ format_password_log() {
     ip_address="$(echo "${password_log_arr[3]}" | grep -Po "$REGEXP_STD")"
     username="$(echo "${password_log_arr[5]}" | grep -Po "$REGEXP_STD")"
     password="$(echo "${password_log_arr[6]}" | grep -Po "$REGEXP_STD")"
-    label="${username:0:10} $ip_address $timestamp"
+    label="$(get_f10_chars_encoded "$username") $ip_address $timestamp"
 
     # Make API call to IP geolocation website to retrieve latitude, longitude, and country
     # Uncomment the line below when hosted publicly
@@ -62,7 +74,7 @@ format_public_key_log() {
     fingerprint=$(echo "${public_key_log_arr[7]}" | grep -Po "$REGEXP_STD")
     base64=$(echo "${public_key_log_arr[8]}" | grep -Po "$REGEXP_STD")
     bits=$(echo "${public_key_log_arr[9]}" | grep -Po "$REGEXP_STD")
-    label="${username:0:10} $ip_address $timestamp"
+    label="$(get_f10_chars_encoded "$username") $ip_address $timestamp"
      
     # Make API call to IP geolocation website to retrieve latitude, longitude, and country
     # Uncomment the line below when hosted publicly
