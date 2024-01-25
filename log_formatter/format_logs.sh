@@ -38,9 +38,9 @@ format_password_log() {
 
     # Make API call to IP geolocation website to retrieve latitude, longitude, and country
     # Uncomment the line below when hosted publicly
-    #response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${ip_address}")
+    response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${ip_address}")
     # Comment the line below when hosted publicly
-    response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${TEST_IP_ADDR}")
+    #response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${TEST_IP_ADDR}")
     # Pass values in JSON object to variables
 IFS=$'\n' read -r -d '' latitude longitude country < <(echo "$response" | jq -r '.latitude,.longitude,.country_name')
 
@@ -66,9 +66,9 @@ format_public_key_log() {
      
     # Make API call to IP geolocation website to retrieve latitude, longitude, and country
     # Uncomment the line below when hosted publicly
-    #response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${ip_address}")
+    response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${ip_address}")
     # Comment the line below when hosted publicly
-    response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${TEST_IP_ADDR}")
+    #response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${TEST_IP_ADDR}")
     # Pass values in JSON object to variables
 IFS=$'\n' read -r -d '' latitude longitude country < <(echo "$response" | jq -r '.latitude,.longitude,.country_name')
 
