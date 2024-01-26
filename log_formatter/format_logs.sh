@@ -20,18 +20,6 @@ AWK_COMMAND="$TRIM_SPACE_COMMAND $PRINT_COLUMNS_COMMAND"
 # Regular expressions for log values
 REGEXP_STD="(?<=\:\s).*$"
 
-# Return a base64 encoded string of the first ten characters of a string
-get_f10_chars_encoded() {
-    decoded="$(echo "$1" | base64 -d)"
-    if [[ ${#decoded} -lt 10 ]]
-    then
-        f10="${decoded:0:${#decoded}}"
-    else
-        f10="${decoded:0:10}"
-    fi
-    echo "$(echo "$f10" | base64)"
-}
-
 # Write logs to file
 write_to_file() {
     echo "$1" >> "${LOG_DIR}$2"
@@ -42,11 +30,10 @@ format_password_log() {
     # Split log by '--' and store each line as an item in an array
     IFS=$'\n' read -r -d '' -a password_log_arr < <(echo "$1" | awk -F '--' "$AWK_COMMAND")
     # Reformat each log value
-    timestamp="${password_log_arr[0]}"
+    IFS=' ' read -r date time <<< "${password_log_arr[0]}"
     ip_address="$(echo "${password_log_arr[3]}" | grep -Po "$REGEXP_STD")"
     username="$(echo "${password_log_arr[5]}" | grep -Po "$REGEXP_STD")"
     password="$(echo "${password_log_arr[6]}" | grep -Po "$REGEXP_STD")"
-    label="$(get_f10_chars_encoded "$username") $ip_address $timestamp"
 
     # Make API call to IP geolocation website to retrieve latitude, longitude, and country
     # Uncomment the line below when hosted publicly
@@ -54,10 +41,10 @@ format_password_log() {
     # Comment the line below when hosted publicly
     #response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${TEST_IP_ADDR}")
     # Pass values in JSON object to variables
-IFS=$'\n' read -r -d '' latitude longitude country < <(echo "$response" | jq -r '.latitude,.longitude,.country_name')
+    IFS=$'\n' read -r -d '' latitude longitude country < <(echo "$response" | jq -r '.latitude,.longitude,.country_name')
 
     # Create new log for syslog server and write to log file
-    password_log_str="label:$label,ip_address:$ip_address,latitude:$latitude,longitude:$longitude,country:$country,username:$username,password:$password,timestamp:$timestamp"
+    password_log_str="ip_address:$ip_address,latitude:$latitude,longitude:$longitude,country:$country,username:$username,password:$password,date:$date,time:$time"
     write_to_file "$password_log_str" "./ssh_password_logins.log"
     #echo "$password_log_str"
 }
@@ -67,14 +54,13 @@ format_public_key_log() {
     # Split log by '--' and store each line as an item in an array
     IFS=$'\n' read -r -d '' -a public_key_log_arr < <(echo "$1" | awk -F '--' "$AWK_COMMAND")
     # Reformat each log value
-    timestamp="${public_key_log_arr[0]}"
+    IFS=' ' read -r date time <<< "${public_key_log_arr[0]}"
     ip_address="$(echo "${public_key_log_arr[3]}" | grep -Po "$REGEXP_STD")"
     username="$(echo "${public_key_log_arr[5]}" | grep -Po "$REGEXP_STD")"
     key_type=$(echo "${public_key_log_arr[6]}" | grep -Po "$REGEXP_STD")
     fingerprint=$(echo "${public_key_log_arr[7]}" | grep -Po "$REGEXP_STD")
     base64=$(echo "${public_key_log_arr[8]}" | grep -Po "$REGEXP_STD")
     bits=$(echo "${public_key_log_arr[9]}" | grep -Po "$REGEXP_STD")
-    label="$(get_f10_chars_encoded "$username") $ip_address $timestamp"
      
     # Make API call to IP geolocation website to retrieve latitude, longitude, and country
     # Uncomment the line below when hosted publicly
@@ -82,10 +68,10 @@ format_public_key_log() {
     # Comment the line below when hosted publicly
     #response=$(curl -4 -s "https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&ip=${TEST_IP_ADDR}")
     # Pass values in JSON object to variables
-IFS=$'\n' read -r -d '' latitude longitude country < <(echo "$response" | jq -r '.latitude,.longitude,.country_name')
+    IFS=$'\n' read -r -d '' latitude longitude country < <(echo "$response" | jq -r '.latitude,.longitude,.country_name')
 
     # Create new log for syslog server and write to log file
-    public_key_log_str="label:$label,ip_address:$ip_address,latitude:$latitude,longitude:$longitude,country:$country,username:$username,key_type:$key_type,fingerprint:$fingerprint,base64:$base64,bits:$bits,timestamp:$timestamp"
+    public_key_log_str="ip_address:$ip_address,latitude:$latitude,longitude:$longitude,country:$country,username:$username,key_type:$key_type,fingerprint:$fingerprint,base64:$base64,bits:$bits,date:$date,time:$time"
     write_to_file "$public_key_log_str" "./ssh_public_key_logins.log"
     #echo "$public_key_log_str"
 }
