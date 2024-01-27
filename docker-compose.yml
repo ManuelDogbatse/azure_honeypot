@@ -7,6 +7,7 @@ services:
       dockerfile: honeypot/Dockerfile
       args:
         - PORT=${PORT}
+    restart: unless-stopped
     env_file:
       - .env
     ports:
@@ -18,6 +19,7 @@ services:
     build:
       context: .
       dockerfile: log_formatter/Dockerfile
+    restart: unless-stopped
     env_file:
       - .env
     volumes:
