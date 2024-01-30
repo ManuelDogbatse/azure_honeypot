@@ -12,14 +12,10 @@ This is a simple SSH honeypot made using Python and Bash. This honeypot is made 
 ## Design
 ### Log Format
 #### Password Authentication Logs
-Label Format: username(first 10) ip_address timestamp
-
-Log Format: label:str,ip_address:str,latitude:int,longitude:int,country:str,username:str,password:str,timestamp:str/time
+ip_address:\<ip_address\>,latitude:\<latitude\>,longitude:\<longitude\>,country:\<country\>,username:\<username\>,password:\<password\>,date:\<date\>,time:\<time\>
 
 #### Public Key Authentication Logs
-Label Format: username(first 10) ip_address timestamp
-
-Log Format: label:str,ip_address:str,latitude:int,longitude:int,country:str,username:str,key_type:str,fingerprint:str,base64:str,bits:int,timestamp:str/time
+ip_address:\<ip_address\>,latitude:\<latitude\>,longitude:\<longitude\>,country:\<country\>,username:\<username\>,key_type:\<key_type\>,fingerprint:\<fingerprint\>,base64:\<base64\>,bits:\<bits\>,date:\<date\>,time:\<time\>
 
 ## How to Use
 Clone this repository onto your machine:
@@ -31,12 +27,14 @@ cd ssh_honeypot
 
 Run the 'setup_environment.sh' script and follow the instructions:
 
-> NOTE - To get an app.ipgeolocation.io API key for getting the geolocation of honeypot attackers, go to [ipgeolocation's website](https://app.ipgeolocation.io) and sign up. Then on the dashboard, create a new API key.
-
 ```bash
 chmod 755 ./setup_environment.sh
 ./setup_environment.sh
 ```
+
+By default, the IP address is the default route and the port number is 22. For the app.ipgeolocation.io API key used to get the geolocation of the honeypot's attackers, go to [ipgeolocation's website](https://app.ipgeolocation.io) and sign up. Then on the dashboard, generate a new API key and paste it in the script as the input.
+
+> NOTE - If the script fails in any way, you can also manually modify the ```.env``` file, which has all the environment variables used by the honeypot.
 
 Start the honeypot server (see [Docker Engine installation](https://docs.docker.com/engine/install/) to download Docker):
 
@@ -45,6 +43,16 @@ docker compose up -d --build
 ```
 
 Your logs will appear in the ```logs``` directory, named ```ssh_password_logins.log``` and ```ssh_public_key_logins.log```.
+
+You can make changes to the ```format_logs.sh``` file in the ```log_formatter``` directory to write reformat all the previously made logs, or test the honeypot without using geolocation. See the comments in the file for more information.
+
+## Connecting to the honeypot
+
+To test the honeypot, you can connect to the honeypot the same way you would connect to a real SSH server:
+
+```bash
+ssh -p <port> <ip_address>
+```
 
 If you have warning connecting to the SSH server like this:
 
