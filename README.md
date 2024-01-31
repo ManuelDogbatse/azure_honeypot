@@ -21,8 +21,7 @@ ip_address:\<ip_address\>,latitude:\<latitude\>,longitude:\<longitude\>,country:
 Clone this repository onto your machine:
 
 ```bash
-git clone https://github.com/ManuelDogbatse/ssh_honeypot.git
-cd ssh_honeypot
+git clone https://github.com/ManuelDogbatse/ssh_honeypot.git && cd ssh_honeypot
 ```
 
 Run the 'setup_environment.sh' script and follow the instructions:
